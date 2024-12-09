@@ -1,6 +1,8 @@
 from datapross import DataProcess, SequenceEncoder, GenresEncoder, IdentityEncoder
 from tools import *
-from module import GNN
+from data_evaluation.loss_function import bpr_loss
+from data_evaluation.evaluation import evaluation
+from module import GNN,GModel
 import pandas as pd
 from torch_geometric.data import HeteroData
 import torch
@@ -48,7 +50,7 @@ user_x = user_x.squeeze(0)
 data['users'].x = user_x
 
 embedding_dim = items_x.size(dim=1)
-model = GNN(in_channels=embedding_dim, out_channels=embedding_dim)
+model = GModel(in_channels=embedding_dim, out_channels=embedding_dim,k=3)
 model = model.to(device)
 data = data.to(device)
 
@@ -60,8 +62,9 @@ optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 losses = []
 
 for iter in trange(iteration):
-    x_src, x_tgt, edge_index = data['items'].x, data['users'].x, data['edge'].edge_index
-    users_emb_final = model.forward(x_src,x_tgt,edge_index)
+    x_src, x_tgt, edge_index,edge_attr = data['items'].x, data['users'].x,
+      data['edge'].edge_index,data['edge'].edge_label
+    users_emb_final = model.forward(x_src,x_tgt,edge_index,edge_attr)
     edge_index_t = torch.flip(data['edge'].edge_index, dims=[0])
     edges = structured_negative_sampling(edge_index_t)
     edges = torch.stack(edges, dim=0)
@@ -80,7 +83,7 @@ for iter in trange(iteration):
     optimizer.step()
     optimizer.zero_grad()
     if iter % 100 == 0:
-        print("loss = ",bpr_loss_value)
+        print("loss = ",bpr_loss_value.item())
 print("Train done !")
 
 plt.plot(losses)
