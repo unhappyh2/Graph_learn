@@ -62,8 +62,7 @@ optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 losses = []
 
 for iter in trange(iteration):
-    x_src, x_tgt, edge_index,edge_attr = data['items'].x, data['users'].x,
-      data['edge'].edge_index,data['edge'].edge_label
+    x_src, x_tgt, edge_index,edge_attr = data['items'].x, data['users'].x,data['edge'].edge_index,data['edge'].edge_label
     users_emb_final = model.forward(x_src,x_tgt,edge_index,edge_attr)
     edge_index_t = torch.flip(data['edge'].edge_index, dims=[0])
     edges = structured_negative_sampling(edge_index_t)

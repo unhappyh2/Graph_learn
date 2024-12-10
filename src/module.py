@@ -65,12 +65,12 @@ class GModel(MessagePassing):
         out = self.propagate(x_src=x_src, x_tgt=x_tgt,edge_index=edge_index,edge_attr=edge_attr)
         return out
 
-    def message(self, x_src,edge_index,edge_attr):
+    def message(self, x_src,edge_index):
         message_src = x_src[edge_index[0]]
-        message_src = message_src * edge_attr.view(-1,1)
         return message_src
 
-    def aggregate(self, inputs, edge_index, dim_size=None):
+    def aggregate(self, inputs, edge_index,edge_attr, dim_size=None):
+        inputs = inputs*edge_attr.view(-1,1)
         weights = self.calculate_weights(edge_index[1])
         weights = weights.view(-1, 1).expand_as(inputs)
         inputs = inputs * weights
